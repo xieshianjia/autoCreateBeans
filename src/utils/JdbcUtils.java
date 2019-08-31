@@ -1,10 +1,8 @@
 package utils;
 
-import pojo.Attribute;
+import test.Test;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class JdbcUtils {
     static {
@@ -15,30 +13,54 @@ public class JdbcUtils {
         }
     }
 
-    public static List<Attribute> ScanDatabase(String URL, String USERNAME, String PWD) {
-        List<Attribute> attributeList = new ArrayList<>();
+    public static void ScanDatabase(String URL, String USERNAME, String PWD) {
+
         try {
             Connection conn = DriverManager.getConnection(URL, USERNAME, PWD);
             PreparedStatement pre = conn.prepareStatement("show tables");
             ResultSet result = pre.executeQuery();
+
+            StringBuilder javaStr = null;
+
+
             while (result.next()) {
                 String tableName = result.getString(1);
                 PreparedStatement pres = conn.prepareStatement("select * from " + tableName);
                 ResultSetMetaData res = pres.getMetaData();
+
+                javaStr = new StringBuilder();
+
+                String packageName = Test.class.getPackage().getName();
+                int pos = packageName.lastIndexOf('.');
+                if (pos == -1) {
+                    javaStr.append("package pojo;\r\n\r\n");
+                } else {
+                    packageName = packageName.substring(0, pos + 1);
+                    javaStr.append("package " + packageName + "pojo;\r\n\r\n");
+                }
+                javaStr.append("public class " + StringUtils.firstToUpper(tableName) + "{\r\n");
+
+
                 for (int i = 1; i <= res.getColumnCount(); i++) {
-                    Attribute attr = new Attribute();
-                    attr.setTableName(tableName);
+
                     String columnName = res.getColumnName(i);
                     String columnTypeName = res.getColumnTypeName(i);
 
-                    attr.setAttrName(columnName);
-                    attr.setType(columnTypeName);
-                    attributeList.add(attr);
+                    String type = "";
+                    type = StringUtils.judgeType(columnTypeName);
+                    String attrName = "";
+                    attrName = columnName;
+                    javaStr.append("    private " + type + " " + attrName + ";\r\n");
+
+
                 }
+                javaStr.append("}");
+                System.out.println(javaStr);
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return attributeList;
+
     }
 }

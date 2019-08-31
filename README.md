@@ -3,6 +3,7 @@
 
 # 用法
 
+    package pojo;
     class Test{
         @Test 
         public void aa{
@@ -14,7 +15,7 @@
         }
     }
 
-> pojo类会生成在Test.java的包中
+> pojo类会生成在Test.java所在的包中
   
 ## 记录一下
 - 还有许多地方需要完善，比如表中字段名是有下划线格式的==
